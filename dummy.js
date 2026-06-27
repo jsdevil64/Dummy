@@ -1,316 +1,208 @@
-// TOP-LA INTHA LINE-A ADD PANNUNGA (Unga Web App URL-a inga podunga)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMmTweux2sZChYAGtTglWXtcgs4EQEXTuQfz9vlZVkTjY0vVFG8TS-503rBcAIcCbG/exec';
+// 1. கூகுள் வெப் ஆப் லிங்க் (Paste your URL here)
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzupiJRPwEH2kOcr3vtADHHHXQIc-dTvvpqGT6x1bW1kgSkRCSdy_pJxbrVshumY1G8fw/exec';
 
-const expertGrid = document.getElementById('experts-grid');
+const productGrid = document.getElementById('product-grid');
 const openFormBtn = document.getElementById('open-form-btn');
 const registerModal = document.getElementById('register-modal');
 const closeRegBtn = document.getElementById('close-reg-btn');
-const closeRevBtn = document.getElementById('close-rev-btn');
-const expertForm = document.getElementById('expert-form');
+const productForm = document.getElementById('product-form');
 const resultsCount = document.getElementById('results-count');
 
-const reviewModal = document.getElementById('review-modal');
-const reviewForm = document.getElementById('review-form');
-const modalReviewsList = document.getElementById('modal-reviews-list');
-const modalReviewCount = document.getElementById('modal-review-count');
+const successModal = document.getElementById('success-modal');
+const successOkBtn = document.getElementById('success-ok-btn');
+
+const tipsBtn = document.getElementById('tips-btn');
+const tipsModal = document.getElementById('tips-modal');
+const closeTipsBtn = document.getElementById('close-tips-btn');
+const tipsAmountInput = document.getElementById('tips-amount');
+const payerNameInput = document.getElementById('payer-name');
+const upiPayLink = document.getElementById('upi-pay-link');
 
 const searchBtn = document.getElementById('search-btn');
 const areaSearch = document.getElementById('area-search');
-const serviceFilter = document.getElementById('service-filter');
+const productFilter = document.getElementById('product-filter');
 const chips = document.querySelectorAll('.chip');
 
-let experts = [];
-let activeExpertId = null; 
+// UPI Settings
+const MY_UPI_ID = "8939717405@ybl";
+const MERCHANT_NAME = "Namma Ooru 360"; 
 
-// GOOGLE SHEET-LA IRUNTHU DATA-VA FETCH PANNUM FUNCTION (சுத்தப்படுத்தப்பட்ட ஒரே ஒரு ஃபங்ஷன்)
-async function loadExpertsFromSheet() {
-    expertGrid.innerHTML = '<div style="text-align:center; padding:40px; grid-column: 1/-1;"><p>விபரங்கள் லோடு ஆகிறது...</p></div>';
-    try {
-        const response = await fetch(SCRIPT_URL, { method: "GET", redirect: "follow" });
-        experts = await response.json();
+let dataList = [];
+let currentFilter = 'all';
+
+// 2. கூகுள் ஷீட்டில் இருந்து தகவல்களை எடுத்தல்
+async function loadDataFromSheet() {
+    productGrid.innerHTML = `
+        <div style="text-align:center; padding:40px; grid-column: 1/-1; color:#cda12c;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:28px; margin-bottom:10px;"></i>
+            <p>விபரங்கள் லோடு ஆகிறது...</p>
+        </div>`;
         
-        if (experts.error) {
-            console.error("Apps Script Error:", experts.error);
-            expertGrid.innerHTML = '<div style="text-align:center; padding:40px; grid-column: 1/-1; color:red;"><p>Apps Script-la error ullathu!</p></div>';
+    try {
+        const response = await fetch(SCRIPT_URL, { method: "GET" });
+        dataList = await response.json();
+        
+        if (dataList.error) {
+            console.error("Apps Script Error:", dataList.error);
+            productGrid.innerHTML = '<div style="text-align:center; padding:40px; grid-column: 1/-1; color:red;"><p>Apps Script பிழை ஏற்பட்டுள்ளது!</p></div>';
         } else {
-            handleSearch();
+            handleSearch(); 
         }
     } catch (error) {
         console.error("Error fetching data:", error);
-        expertGrid.innerHTML = '<div style="text-align:center; padding:40px; grid-column: 1/-1; color:red;"><p>டேட்டா லோடு செய்வதில் பிழை ஏற்பட்டுள்ளது!</p></div>';
+        productGrid.innerHTML = '<div style="text-align:center; padding:40px; grid-column: 1/-1; color:red;"><p>டேட்டா லோடு செய்வதில் பிழை ஏற்பட்டுள்ளது!</p></div>';
     }
 }
 
-// PREMIUM RANKING ENGINE (Premium First -> Then Rating Sorting High to Low)
-function sortExpertsData(array) {
-    return array.sort((a, b) => {
-        if (a.isPremium && !b.isPremium) return -1;
-        if (!a.isPremium && b.isPremium) return 1;
-        return parseFloat(b.rating) - parseFloat(a.rating);
-    });
-}
-
-// Function to render profiles
-function renderExperts(dataToRender = experts) {
-    expertGrid.innerHTML = '';
+// 3. கார்டுகளை உருவாக்குதல்
+function renderCards(dataToRender = dataList) {
+    productGrid.innerHTML = '';
+    if (!Array.isArray(dataToRender)) return;
     
-    const sortedData = sortExpertsData([...dataToRender]);
-    resultsCount.textContent = `${sortedData.length} பதிவுகள் உள்ளன`;
+    resultsCount.textContent = `${dataToRender.length} பதிவுகள் உள்ளன`;
 
-    if(sortedData.length === 0) {
-        expertGrid.innerHTML = `
-            <div style="text-align:center; padding:40px; color:#64748B; grid-column: 1/-1;">
-                <i class="fa-solid fa-store-slash" style="font-size:40px; margin-bottom:10px; color:#cbd5e1;"></i>
-                <p>இந்த ஏரியாவில் விபரங்கள் எதுவும் இல்லை! முதல் ஆளாகப் பதிவு செய்யுங்கள்.</p>
+    if(dataToRender.length === 0) {
+        productGrid.innerHTML = `
+            <div style="text-align:center; padding:40px; color:#6B7280; grid-column: 1/-1;">
+                <i class="fa-solid fa-folder-open" style="font-size:36px; margin-bottom:10px; color:#cbd5e1;"></i>
+                <p>தற்சமயம் பதிவுகள் எதுவும் இல்லை!</p>
             </div>`;
         return;
     }
 
-    sortedData.forEach(expert => {
+    dataToRender.forEach(item => {
         const card = document.createElement('div');
-        card.classList.add('expert-card');
+        card.className = 'expert-card';
+
+        const title     = item.shopName  || item["shopName"]  || Object.values(item)[1] || "தலைப்பு இல்லை";
+        const subTitle  = item.name      || item["name"]      || Object.values(item)[2] || "விபரம் இல்லை";
+        const phone     = item.phone     || item["phone"]     || Object.values(item)[3] || "";
+        const type      = item.type      || item["type"]      || Object.values(item)[4] || "cat1";
+        const extraInfo = item.delivery  || item["delivery"]  || Object.values(item)[5] || "";
+        const location  = item.location  || item["location"]  || Object.values(item)[6] || "இடம் இல்லை";
+
+        let iconHtml = '<i class="fa-solid fa-box"></i>'; 
+        let typeBadge = 'பிரிவு 1';
         
-        if (expert.isPremium) {
-            card.classList.add('premium-active');
-        }
-        
-        let avatarHTML = '';
-        if (expert.image) {
-            avatarHTML = `<img src="${expert.image}" alt="${expert.name}" class="avatar-image">`;
-        } else {
-            let iconClass = 'fa-bed';
-            if (expert.prof === 'food') iconClass = 'fa-utensils';
-            if (expert.prof === 'health') iconClass = 'fa-heart-pulse';
-            avatarHTML = `<div class="avatar-container"><i class="fa-solid ${iconClass}"></i></div>`;
-        }
-        
-        let tagHTML = '';
-        if (expert.isPremium) {
-            tagHTML = `<span class="premium-tag"><i class="fa-solid fa-crown"></i> Premium</span>`;
-        }
-        
+        if(type.toString().toLowerCase() === 'cat2') { iconHtml = '<i class="fa-solid fa-tags"></i>'; typeBadge = 'பிரிவு 2'; }
+        if(type.toString().toLowerCase() === 'cat3') { iconHtml = '<i class="fa-solid fa-store"></i>'; typeBadge = 'பிரிவு 3'; }
+        if(type.toString().toLowerCase() === 'cat4') { iconHtml = '<i class="fa-solid fa-star"></i>'; typeBadge = 'பிரிவு 4'; }
+
         card.innerHTML = `
-            ${tagHTML}
-            <div class="card-left" onclick="openReviewSystem('${expert.id}')">
-                ${avatarHTML}
+            <div class="card-left">
+                <div class="avatar-container">${iconHtml}</div>
                 <div class="expert-info">
-                    <span class="badge">${getProfTamil(expert.prof)}</span>
-                    <h4>${expert.name}</h4>
-                    <p class="expert-loc"><i class="fa-solid fa-location-dot"></i> ${expert.location}</p>
-                    <div class="rating-badge"><i class="fa-solid fa-star"></i> <span>${expert.rating}</span></div>
+                    <h4>${title} <span class="badge">${typeBadge}</span></h4>
+                    <p class="shop-title"><i class="fa-solid fa-circle-info"></i> ${subTitle}</p>
+                    <p class="delivery-tag"><i class="fa-solid fa-circle-nodes"></i> ${extraInfo}</p>
+                    <p class="expert-loc"><i class="fa-solid fa-location-dot"></i> ${location}</p>
                 </div>
             </div>
             <div class="card-right-actions">
-                <div class="action-buttons-row">
-                    <a href="tel:${expert.phone}" class="call-btn-link">
-                        <i class="fa-solid fa-phone"></i>
-                    </a>
-                </div>
+                ${phone ? `<a href="tel:${phone}" class="call-btn-link" title="அழைக்க"><i class="fa-solid fa-phone"></i></a>` : ''}
+                ${phone ? `<a href="https://wa.me/91${phone}?text=வணக்கம், உங்களின் ${title} பதிவு குறித்து விபரம் அறிய தொடர்புகொள்கிறேன்." target="_blank" class="wa-btn-link" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
             </div>
         `;
-        expertGrid.appendChild(card);
+        productGrid.appendChild(card);
     });
 }
 
-function getProfTamil(prof) {
-    if(prof === 'pg') return 'Rooms & PG';
-    if(prof === 'food') return 'உணவகம் & மெஸ்';
-    if(prof === 'health') return 'கிளினிக் / ஹாஸ்பிட்டல்';
-    return prof;
-}
-
-// Open Review Modal System
-window.openReviewSystem = function(id) {
-    const expert = experts.find(e => e.id === id);
-    if (!expert) return;
-
-    activeExpertId = id;
-    document.getElementById('modal-expert-name').textContent = expert.name;
-    document.getElementById('modal-expert-prof').textContent = getProfTamil(expert.prof);
-    document.getElementById('modal-expert-loc').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${expert.location}`;
-    
-    const avatarDiv = document.getElementById('modal-expert-avatar');
-    if (expert.image) {
-        avatarDiv.innerHTML = `<img src="${expert.image}" class="avatar-image">`;
-    } else {
-        let iconClass = 'fa-bed';
-        if (expert.prof === 'food') iconClass = 'fa-utensils';
-        if (expert.prof === 'health') iconClass = 'fa-heart-pulse';
-        avatarDiv.innerHTML = `<div class="avatar-container" style="margin-bottom:0;"><i class="fa-solid ${iconClass}"></i></div>`;
-    }
-
-    renderReviewsList(expert);
-    reviewModal.style.display = 'flex';
-}
-
-function renderReviewsList(expert) {
-    modalReviewsList.innerHTML = '';
-    modalReviewCount.textContent = expert.reviews.length;
-
-    if (expert.reviews.length === 0) {
-        modalReviewsList.innerHTML = `<p style="font-size:12px; color:#64748B; text-align:center; padding:10px;">மதிப்புரைகள் எதுவும் இல்லை.</p>`;
-        return;
-    }
-
-    expert.reviews.forEach(rev => {
-        const revCard = document.createElement('div');
-        revCard.classList.add('single-review-card');
-        let stars = '⭐'.repeat(rev.stars);
-        revCard.innerHTML = `
-            <div class="review-stars">${stars}</div>
-            <p class="review-comment">${rev.text}</p>
-        `;
-        modalReviewsList.appendChild(revCard);
-    });
-}
-
-reviewForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const ratingSelect = document.getElementById('review-rating').value;
-    const reviewText = document.getElementById('review-text').value;
-
-    const expert = experts.find(e => e.id === activeExpertId);
-    if (expert) {
-        expert.reviews.unshift({ stars: parseInt(ratingSelect), text: reviewText });
-        const totalStars = expert.reviews.reduce((sum, r) => sum + r.stars, 0);
-        expert.rating = (totalStars / expert.reviews.length).toFixed(1);
-        renderReviewsList(expert);
-        handleSearch();
-        reviewForm.reset();
-    }
-});
-
-// SEARCH FILTER WITH LIVE SORTING
+// 4. தேடுதல் மற்றும் ஃபில்டர் செயலாக்கம்
 function handleSearch() {
     const searchText = areaSearch.value.toLowerCase().trim();
-    const selectedService = serviceFilter.value;
+    
+    const filtered = dataList.filter(item => {
+        const itemType = (item.type || item["type"] || Object.values(item)[4] || "cat1").toString().toLowerCase();
+        const itemLoc = (item.location || item["location"] || Object.values(item)[6] || "").toString().toLowerCase();
+        const itemTitle = (item.shopName || item["shopName"] || Object.values(item)[1] || "").toString().toLowerCase();
+        const itemSub = (item.name || item["name"] || Object.values(item)[2] || "").toString().toLowerCase();
 
-    const filtered = experts.filter(expert => {
-        const matchesLocation = expert.location.toLowerCase().includes(searchText);
-        const matchesService = (selectedService === 'all') || (expert.prof === selectedService);
-        return matchesLocation && matchesService;
+        const matchesType = (currentFilter === 'all' || itemType === currentFilter);
+        const matchesSearch = (itemLoc.includes(searchText) || itemTitle.includes(searchText) || itemSub.includes(searchText));
+
+        return matchesType && matchesSearch;
     });
 
-    renderExperts(filtered);
+    renderCards(filtered);
 }
+
+function updateUpiLink() {
+    const amount = tipsAmountInput.value || 100;
+    const name = payerNameInput.value.trim() || "Web Donor";
+    const note = encodeURIComponent(`Support from ${name}`);
+    upiPayLink.href = `upi://pay?pa=${MY_UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${amount}&cu=INR&tn=${note}`;
+}
+
+// 5. Events லிசனர்கள்
+searchBtn.addEventListener('click', handleSearch);
+productFilter.addEventListener('change', (e) => {
+    currentFilter = e.target.value;
+    chips.forEach(c => {
+        if(c.getAttribute('data-filter') === currentFilter) c.classList.add('active');
+        else c.classList.remove('active');
+    });
+    handleSearch();
+});
 
 chips.forEach(chip => {
     chip.addEventListener('click', () => {
         chips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        const filterValue = chip.getAttribute('data-filter');
-        serviceFilter.value = filterValue;
+        currentFilter = chip.getAttribute('data-filter');
+        productFilter.value = currentFilter;
         handleSearch();
     });
 });
 
-searchBtn.addEventListener('click', handleSearch);
-areaSearch.addEventListener('keyup', (e) => { if(e.key === 'Enter') handleSearch(); });
+openFormBtn.addEventListener('click', () => registerModal.style.display = 'flex');
+closeRegBtn.addEventListener('click', () => registerModal.style.display = 'none');
+tipsBtn.addEventListener('click', () => { tipsModal.style.display = 'flex'; updateUpiLink(); });
+closeTipsBtn.addEventListener('click', () => tipsModal.style.display = 'none');
+successOkBtn.addEventListener('click', () => successModal.style.display = 'none');
 
-// MODAL OPEN / CLOSE EVENTS (இப்போது கச்சிதமாக வேலை செய்யும்)
-openFormBtn.addEventListener('click', () => { registerModal.style.display = 'flex'; });
-closeRegBtn.addEventListener('click', () => { registerModal.style.display = 'none'; });
-closeRevBtn.addEventListener('click', () => { reviewModal.style.display = 'none'; });
+tipsAmountInput.addEventListener('input', updateUpiLink);
+payerNameInput.addEventListener('input', updateUpiLink);
 
-// FORM SUBMIT ACTION
-expertForm.addEventListener('submit', (e) => {
+window.addEventListener('click', (e) => {
+    if (e.target === registerModal) registerModal.style.display = 'none';
+    if (e.target === tipsModal) tipsModal.style.display = 'none';
+});
+
+// 6. ஃபார்ம் சப்மிட் செய்யும் போது கூகுள் ஷீட்டுக்கு அனுப்புதல்
+productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fileInput = document.getElementById('profile-pic');
-    const file = fileInput.files[0];
     
-    const saveExpert = async (imageSrc = null) => {
-        const newExpertData = {
-            id: Date.now().toString(),
-            name: document.getElementById('name').value,
-            phone: document.getElementById('phone').value,
-            prof: document.getElementById('prof').value,
-            location: document.getElementById('location').value,
-            rating: "5.0",
-            image: imageSrc,
-            isPremium: false,
-            reviews: []
-        };
+    const submitBtn = productForm.querySelector('.submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> பதிவாகிறது...`;
 
-        experts.unshift(newExpertData);
-        handleSearch(); 
-        
-        registerModal.style.display = 'none';
-        expertForm.reset();
-
-        const sheetPayload = {
-            action: "create",
-            ...newExpertData
-        };
-        delete sheetPayload.reviews; 
-
-        try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(sheetPayload)
-            });
-            console.log("Data saved to Google Sheet!");
-        } catch (error) {
-            console.error("Sheet save error:", error);
-        }
+    const formData = {
+        shopName: document.getElementById('shop-name').value, 
+        name: document.getElementById('owner-name').value,     
+        phone: document.getElementById('phone').value,         
+        type: document.getElementById('prod-type').value,       
+        delivery: document.getElementById('delivery-info').value,
+        location: document.getElementById('location').value    
     };
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) { 
-            saveExpert(event.target.result); 
-        };
-        reader.readAsDataURL(file);
-    } else {
-        saveExpert(null);
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(formData)
+        });
+        
+        registerModal.style.display = 'none';
+        productForm.reset();
+        successModal.style.display = 'flex';
+        loadDataFromSheet();
+    } catch (error) {
+        console.error("Error:", error);
+        alert("பதிவு செய்வதில் தோல்வி!");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     }
 });
 
-// App Initialization
-loadExpertsFromSheet();
-
-// --- TIPS SYSTEM CODE ---
-
-// உங்கள் UPI ஐடியை இங்கே கொடுக்கவும்
-const MY_UPI_ID = '8939717405@ybl'; 
-const MY_NAME = 'Namma Ooru Admin'; // உங்கள் பெயர் அல்லது பிசினஸ் பெயர்
-
-const tipsBtn = document.getElementById('tips-btn');
-const tipsModal = document.getElementById('tips-modal');
-const closeTipsBtn = document.getElementById('close-tips-btn');
-const tipsForm = document.getElementById('tips-form');
-
-// டிப்ஸ் விண்டோவை ஓபன் செய்ய
-tipsBtn.addEventListener('click', () => {
-    tipsModal.style.display = 'flex';
-});
-
-// டிப்ஸ் விண்டோவை மூட
-closeTipsBtn.addEventListener('click', () => {
-    tipsModal.style.display = 'none';
-});
-
-// பணம் செலுத்தும் பகுதி (UPI Deep Linking)
-tipsForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const amount = document.getElementById('tips-amount').value;
-
-    if (!amount || amount <= 0) {
-        alert("தயவுசெய்து சரியான தொகையை உள்ளிடவும்!");
-        return;
-    }
-
-    // UPI Standard URL கட்டமைப்பு
-    const upiUrl = `upi://pay?pa=${encodeURIComponent(MY_UPI_ID)}&pn=${encodeURIComponent(MY_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Tips for Namma Ooru App')}`;
-
-    // மொபைலாக இருந்தால் நேரடியாக GPay/PhonePe ஆப்களுக்குப் போகும்
-    window.location.href = upiUrl;
-
-    // விண்டோவை மூடி ஃபார்மை ரீசெட் செய்கிறோம்
-    tipsModal.style.display = 'none';
-    tipsForm.reset();
-});
-
+document.addEventListener('DOMContentLoaded', loadDataFromSheet);
