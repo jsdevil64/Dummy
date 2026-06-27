@@ -1,5 +1,5 @@
 // 1. கூகுள் வெப் ஆப் லிங்க் (Paste your URL here)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzupiJRPwEH2kOcr3vtADHHHXQIc-dTvvpqGT6x1bW1kgSkRCSdy_pJxbrVshumY1G8fw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAYGs0vkc0V7a5DvVE9gKAUS7_BHwPsIVWW3VutST2dBZjUczvF1O9WyNq01vTaUzcfA/exec';
 
 const productGrid = document.getElementById('product-grid');
 const openFormBtn = document.getElementById('open-form-btn');
