@@ -88,10 +88,19 @@
                 </div>
 
                 <div class="form-group">
-                    <label><i class="fa-solid fa-phone"></i> தொடர்பு எண் (WhatsApp எண்)</label>
-                    <input type="tel" id="phone" placeholder="98765xxxxx" required>
-                </div>
+        <label>தொடர்பு எண்</label>
+        <input type="tel" id="phone" placeholder="98765xxxxx" required>
+    </div>
+    <button type="button" id="send-otp-btn" class="submit-btn">OTP அனுப்பு</button>
+</div>
 
+<div id="otp-section" style="display:none;">
+    <div class="form-group">
+        <label>OTP-ஐ உள்ளிடவும்</label>
+        <input type="text" id="otp-input" placeholder="0000">
+    </div>
+    <button type="button" id="verify-otp-btn" class="submit-btn">சரிபார்க்கவும்</button>
+</div>
                 <div class="form-group">
                     <label><i class="fa-solid fa-list"></i> வாகன வகை (Vehicle Type)</label>
                     <select id="prod-type" required>
