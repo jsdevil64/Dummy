@@ -167,6 +167,25 @@ window.addEventListener('click', (e) => {
     if (e.target === tipsModal) tipsModal.style.display = 'none';
 });
 
+// OTP அனுப்பும் பங்க்ஷன்
+async function sendOTPRequest(phone, formData) {
+    const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "sendOTP", phone: phone })
+    });
+    // வெற்றி பெற்றால் OTP இன்புட் பாக்ஸை காட்டவும்
+}
+
+// OTP சரிபார்க்கும் பங்க்ஷன்
+async function verifyOTPRequest(phone, otp, formData) {
+    const payload = { ...formData, action: "verifyOTP", phone: phone, otp: otp };
+    const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+    // வெற்றி பெற்றால் ஷீட்டில் சேமிக்கும் (மேலே உள்ள GAS கோடு இதைச் செய்யும்)
+}
+
 // 6. ஃபார்ம் சப்மிட் செய்யும் போது கூகுள் ஷீட்டுக்கு அனுப்புதல்
 productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
