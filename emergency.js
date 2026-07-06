@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrDUxhLexVQqsFx7e01J2I4UTct70p_bxFb73unfR2Y_83-P9NPTt5zTr2C2uNFkP9mA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5xHmV8hZkdH5cf_Edwjv5AlEQ-RuXOPFXNm7abpUkWTEe7tk7n466VmcRrLvm5wC14Q/exec';
 
 const productGrid = document.getElementById('product-grid');
 const openFormBtn = document.getElementById('open-form-btn');
