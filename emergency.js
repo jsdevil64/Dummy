@@ -69,42 +69,4 @@ function renderCards(dataToRender = dataList) {
                 <i class="fa-solid fa-folder-open" style="font-size:36px; margin-bottom:10px; color:#cbd5e1;"></i>
                 <p>தற்சமயம் பதிவுகள் எதுவும் இல்லை!</p>      ithula register la phone numberku aduthu otp verification aduthu password venum aduthu left side top cornerla login oru button athula phone number and password pottathuku apparam antha phone number password ithula forget password option venum atha click panna register panna number ku otp send aganu otp pottathukku appara change passward option venum entha cardku set agutho antha antha card edite and delete option venum     send otp const data = '{
   
-// லாகின் செயல்பாடு
-async function loginUser() {
 
-    const response = await fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: 'login', phone, password })
-    });
-    const result = await response.json();
-    
-    if (result.status === 'success') {
-        localStorage.setItem('userPhone', phone);
-        alert('Login Successful!');
-        location.reload();
-    } else {
-        alert('Invalid Details!');
-    }
-}
-
-// கார்டுகளை லோட் செய்யும் போது...
-function renderCards(dataToRender) {
-    const loggedInPhone = localStorage.getItem('userPhone');
-    productGrid.innerHTML = '';
-    
-    dataToRender.forEach((item) => {
-        let actionBtns = '';
-        // போன் நம்பர் மேட்ச் ஆனா எடிட்/டெலீட் பட்டன் காட்டும்
-        if (item.phone == loggedInPhone) {
-            actionBtns = `<button onclick="editItem('${item.phone}')">Edit</button>
-                          <button onclick="deleteItem('${item.phone}')">Delete</button>`;
-        }
-        
-        productGrid.innerHTML += `
-            <div class="expert-card">
-                <div>${item.shopName} - ${item.phone}</div>
-                ${actionBtns}
-            </div>
-        `;
-    });
-}
