@@ -22,6 +22,19 @@ const areaSearch = document.getElementById('area-search');
 const productFilter = document.getElementById('product-filter');
 const chips = document.querySelectorAll('.chip');
 
+// புதிய மாறிகள் (Variables) - Login & Edit
+const loginBtn = document.getElementById('login-btn');
+const loginModal = document.getElementById('login-modal');
+const closeLoginBtn = document.getElementById('close-login-btn');
+const loginForm = document.getElementById('login-form');
+
+const editModal = document.getElementById('edit-modal');
+const closeEditBtn = document.getElementById('close-edit-btn');
+const editForm = document.getElementById('edit-form');
+const deleteBtn = document.getElementById('delete-btn');
+
+let loggedInUserPhone = null;
+
 const MY_UPI_ID = "8939717405@ybl";
 const MERCHANT_NAME = "Namma Ooru 360"; 
 
@@ -77,14 +90,23 @@ function renderCards(dataToRender = dataList) {
         const extraInfo = item.delivery  || item["delivery"]  || Object.values(item)[5] || "";
         const location  = item.location  || item["location"]  || Object.values(item)[6] || "இடம் இல்லை";
         
-        // குறிப்பு: கடவுச்சொல் (Password) இங்கே தவிர்க்கப்பட்டுள்ளது, எனவே கார்டில் தெரியாது.
-
         let iconHtml = '<i class="fa-solid fa-truck-medical"></i>'; 
         let typeBadge = 'ஆம்புலன்ஸ்';
         
         if(type.toString().toLowerCase() === 'cat2') { iconHtml = '<i class="fa-solid fa-hospital"></i>'; typeBadge = 'மருத்துவமனை'; }
         if(type.toString().toLowerCase() === 'cat3') { iconHtml = '<i class="fa-solid fa-shield-halved"></i>'; typeBadge = 'போலீஸ்'; }
         if(type.toString().toLowerCase() === 'cat4') { iconHtml = '<i class="fa-solid fa-clock-medical"></i>'; typeBadge = '24H மெடிக்கல்'; }
+
+        // லாகின் செய்த பயனர் இவர்களுக்குச் சொந்தமான கார்டாக இருந்தால் மட்டும் Edit/Delete பட்டன் காட்டும்
+        let ownerActions = '';
+        if (loggedInUserPhone && phone.toString() === loggedInUserPhone.toString()) {
+            ownerActions = `
+                <div class="edit-delete-actions">
+                    <button class="edit-card-btn" onclick="openEditModal('${phone}')"><i class="fa-solid fa-pen"></i> Edit</button>
+                    <button class="delete-card-btn" onclick="deleteRecord('${phone}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                </div>
+            `;
+        }
 
         card.innerHTML = `
             <div class="card-left">
@@ -94,6 +116,7 @@ function renderCards(dataToRender = dataList) {
                     <p class="shop-title"><i class="fa-solid fa-circle-info"></i> ${subTitle}</p>
                     <p class="delivery-tag"><i class="fa-solid fa-circle-nodes"></i> ${extraInfo}</p>
                     <p class="expert-loc"><i class="fa-solid fa-location-dot"></i> ${location}</p>
+                    ${ownerActions}
                 </div>
             </div>
             <div class="card-right-actions">
@@ -130,6 +153,98 @@ function updateUpiLink() {
     upiPayLink.href = `upi://pay?pa=${MY_UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${amount}&cu=INR&tn=${note}`;
 }
 
+// Login Process Events
+loginBtn.addEventListener('click', () => loginModal.style.display = 'flex');
+closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
+closeEditBtn.addEventListener('click', () => editModal.style.display = 'none');
+
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const phoneInput = document.getElementById('login-phone').value.trim();
+    const passInput = document.getElementById('login-password').value.trim();
+
+    const foundUser = dataList.find(item => {
+        const itemPhone = (item.phone || item["phone"] || "").toString().trim();
+        const itemPass = (item.password || item["password"] || "").toString().trim();
+        return itemPhone === phoneInput && itemPass === passInput;
+    });
+
+    if (foundUser) {
+        loggedInUserPhone = phoneInput;
+        loginModal.style.display = 'none';
+        loginForm.reset();
+        alert("உள்நுழைவு வெற்றி! உங்களின் பதிவுகளில் Edit / Delete பொத்தான்கள் தோன்றும்.");
+        handleSearch(); 
+    } else {
+        alert("தவறான தொலைபேசி எண் அல்லது கடவுச்சொல்!");
+    }
+});
+
+// Edit Modal ஓபன் செய்ய
+window.openEditModal = function(phone) {
+    const item = dataList.find(d => (d.phone || d["phone"] || "").toString() === phone.toString());
+    if(!item) return;
+
+    document.getElementById('edit-shop-name').value = item.shopName || item["shopName"] || "";
+    document.getElementById('edit-owner-name').value = item.name || item["name"] || "";
+    document.getElementById('edit-phone').value = item.phone || item["phone"] || "";
+    document.getElementById('edit-prod-type').value = item.type || item["type"] || "cat1";
+    document.getElementById('edit-delivery-info').value = item.delivery || item["delivery"] || "";
+    document.getElementById('edit-location').value = item.location || item["location"] || "";
+    
+    editModal.style.display = 'flex';
+};
+
+// Edit சேமிக்க (Apps Script-க்கு action=update அனுப்புதல்)
+editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const updatedData = {
+        action: 'update',
+        phone: document.getElementById('edit-phone').value,
+        shopName: document.getElementById('edit-shop-name').value,
+        name: document.getElementById('edit-owner-name').value,
+        type: document.getElementById('edit-prod-type').value,
+        delivery: document.getElementById('edit-delivery-info').value,
+        location: document.getElementById('edit-location').value
+    };
+
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(updatedData)
+        });
+        editModal.style.display = 'none';
+        alert("விபரங்கள் வெற்றிகரமாக மாற்றப்பட்டன!");
+        loadDataFromSheet();
+    } catch(err) {
+        alert("மாற்றுவதில் பிழை ஏற்பட்டுள்ளது!");
+    }
+});
+
+// Delete செய்ய (Apps Script-க்கு action=delete அனுப்புதல்)
+window.deleteRecord = async function(phone) {
+    if(confirm("நிச்சயமாக இந்தப் பதிவை நீக்க விரும்புகிறீர்களா?")) {
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'delete', phone: phone })
+            });
+            alert("பதிவு வெற்றிகரமாக நீக்கப்பட்டது!");
+            loadDataFromSheet();
+        } catch(err) {
+            alert("நீக்குவதில் பிழை!");
+        }
+    }
+};
+
+deleteBtn.addEventListener('click', () => {
+    const phone = document.getElementById('edit-phone').value;
+    if (phone) {
+        editModal.style.display = 'none';
+        deleteRecord(phone);
+    }
+});
+
 searchBtn.addEventListener('click', handleSearch);
 productFilter.addEventListener('change', (e) => {
     currentFilter = e.target.value;
@@ -162,6 +277,8 @@ payerNameInput.addEventListener('input', updateUpiLink);
 window.addEventListener('click', (e) => {
     if (e.target === registerModal) registerModal.style.display = 'none';
     if (e.target === tipsModal) tipsModal.style.display = 'none';
+    if (e.target === loginModal) loginModal.style.display = 'none';
+    if (e.target === editModal) editModal.style.display = 'none';
 });
 
 productForm.addEventListener('submit', async (e) => {
@@ -179,7 +296,7 @@ productForm.addEventListener('submit', async (e) => {
         type: document.getElementById('prod-type').value,       
         delivery: document.getElementById('delivery-info').value,
         location: document.getElementById('location').value,
-        password: document.getElementById('reg-password').value // பாஸ்வேர்ட் சேர்க்கப்பட்டுள்ளது
+        password: document.getElementById('reg-password').value 
     };
 
     try {
