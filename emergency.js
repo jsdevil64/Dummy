@@ -22,7 +22,7 @@ const areaSearch = document.getElementById('area-search');
 const productFilter = document.getElementById('product-filter');
 const chips = document.querySelectorAll('.chip');
 
-// புதிய மாறிகள் (Variables) - Login & Edit
+// Login & Edit Elements
 const loginBtn = document.getElementById('login-btn');
 const loginModal = document.getElementById('login-modal');
 const closeLoginBtn = document.getElementById('close-login-btn');
@@ -34,6 +34,7 @@ const editForm = document.getElementById('edit-form');
 const deleteBtn = document.getElementById('delete-btn');
 
 let loggedInUserPhone = null;
+let loggedInUserPassword = null;
 
 const MY_UPI_ID = "8939717405@ybl";
 const MERCHANT_NAME = "Namma Ooru 360"; 
@@ -89,6 +90,7 @@ function renderCards(dataToRender = dataList) {
         const type      = item.type      || item["type"]      || Object.values(item)[4] || "cat1";
         const extraInfo = item.delivery  || item["delivery"]  || Object.values(item)[5] || "";
         const location  = item.location  || item["location"]  || Object.values(item)[6] || "இடம் இல்லை";
+        const password  = item.password  || item["password"]  || Object.values(item)[7] || "";
         
         let iconHtml = '<i class="fa-solid fa-truck-medical"></i>'; 
         let typeBadge = 'ஆம்புலன்ஸ்';
@@ -97,9 +99,11 @@ function renderCards(dataToRender = dataList) {
         if(type.toString().toLowerCase() === 'cat3') { iconHtml = '<i class="fa-solid fa-shield-halved"></i>'; typeBadge = 'போலீஸ்'; }
         if(type.toString().toLowerCase() === 'cat4') { iconHtml = '<i class="fa-solid fa-clock-medical"></i>'; typeBadge = '24H மெடிக்கல்'; }
 
-        // லாகின் செய்த பயனர் இவர்களுக்குச் சொந்தமான கார்டாக இருந்தால் மட்டும் Edit/Delete பட்டன் காட்டும்
+        // லாகின் செய்த தொலைபேசி எண்ணும் பாஸ்வேர்டும் இந்த கார்டின் டேட்டாவுடன் சரியாகப் பொருந்துமா என சரிபார்க்கிறது
         let ownerActions = '';
-        if (loggedInUserPhone && phone.toString() === loggedInUserPhone.toString()) {
+        if (loggedInUserPhone && loggedInUserPassword && 
+            phone.toString() === loggedInUserPhone.toString() && 
+            password.toString() === loggedInUserPassword.toString()) {
             ownerActions = `
                 <div class="edit-delete-actions">
                     <button class="edit-card-btn" onclick="openEditModal('${phone}')"><i class="fa-solid fa-pen"></i> Edit</button>
@@ -171,9 +175,10 @@ loginForm.addEventListener('submit', (e) => {
 
     if (foundUser) {
         loggedInUserPhone = phoneInput;
+        loggedInUserPassword = passInput;
         loginModal.style.display = 'none';
         loginForm.reset();
-        alert("உள்நுழைவு வெற்றி! உங்களின் பதிவுகளில் Edit / Delete பொத்தான்கள் தோன்றும்.");
+        alert("உள்நுழைவு வெற்றி! உங்களின் பதிவுக்கு மட்டும் Edit / Delete பொத்தான்கள் தோன்றும்.");
         handleSearch(); 
     } else {
         alert("தவறான தொலைபேசி எண் அல்லது கடவுச்சொல்!");
@@ -195,7 +200,7 @@ window.openEditModal = function(phone) {
     editModal.style.display = 'flex';
 };
 
-// Edit சேமிக்க (Apps Script-க்கு action=update அனுப்புதல்)
+// Edit சேமிக்க
 editForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const updatedData = {
@@ -221,7 +226,7 @@ editForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Delete செய்ய (Apps Script-க்கு action=delete அனுப்புதல்)
+// Delete செய்ய
 window.deleteRecord = async function(phone) {
     if(confirm("நிச்சயமாக இந்தப் பதிவை நீக்க விரும்புகிறீர்களா?")) {
         try {
