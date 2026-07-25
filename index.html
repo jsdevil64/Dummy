@@ -10,15 +10,21 @@
 </head>
 <body>
 
-    <header>
-        <div class="logo-container">
-            <i class="fa-solid fa-layer-group store-logo-icon"></i>
-            <h1>நம்ம ஊரு <br><span>அவசர எண்கள்.</span></h1>
-        </div>
+
+<header>
+    <div class="logo-container">
+        <i class="fa-solid fa-layer-group store-logo-icon"></i>
+        <h1>நம்ம ஊரு <br><span>அவசர எண்கள்.</span></h1>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <button id="login-btn" class="tips-header-btn" style="background: #10B981; color: white;">
+            <i class="fa-solid fa-right-to-bracket"></i> Login
+        </button>
         <button id="tips-btn" class="tips-header-btn">
             <i class="fa-solid fa-hand-holding-heart"></i> TIPS
         </button>
-    </header>
+    </div>
+</header>
 
     <main>
         <section class="hero-section">
@@ -157,6 +163,73 @@
             <button id="success-ok-btn" style="background: #0f1c3f; color: white; border: none; width: 100%; padding: 14px; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 15px;">சரி</button>
         </div>
     </div>
+
+    <!-- Login Modal -->
+<div id="login-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-lock"></i> நிர்வாகப் பகுதி (Login)</h3>
+            <span class="close-btn" id="close-login-btn">&times;</span>
+        </div>
+        <form id="login-form">
+            <div class="form-group">
+                <label><i class="fa-solid fa-phone"></i> பதிவு செய்த தொலைபேசி எண்</label>
+                <input type="tel" id="login-phone" placeholder="98765xxxxx" required>
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-key"></i> கடவுச்சொல் (Password)</label>
+                <input type="password" id="login-password" placeholder="உங்கள் கடவுச்சொல்" required>
+            </div>
+            <button type="submit" class="submit-btn">உேள்நுழைய (Login)</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-pen-to-square"></i> பதிவைத் திருத்து / நீக்கு</h3>
+            <span class="close-btn" id="close-edit-btn">&times;</span>
+        </div>
+        <form id="edit-form">
+            <input type="hidden" id="edit-row-index">
+            <div class="form-group">
+                <label>சேவை அல்லது இடத்தின் பெயர்</label>
+                <input type="text" id="edit-shop-name" required>
+            </div>
+            <div class="form-group">
+                <label>பொறுப்பாளர் / மருத்துவர் பெயர்</label>
+                <input type="text" id="edit-owner-name" required>
+            </div>
+            <div class="form-group">
+                <label>அவசரத் தொடர்பு எண்</label>
+                <input type="tel" id="edit-phone" required>
+            </div>
+            <div class="form-group">
+                <label>சேவை வகை</label>
+                <select id="edit-prod-type" required>
+                    <option value="cat1">ஆம்புலன்ஸ் (Ambulance)</option>
+                    <option value="cat2">மருத்துவமனைகள் (Hospitals)</option>
+                    <option value="cat3">காவல் நிலையங்கள் (Police)</option>
+                    <option value="cat4">24H மெடிக்கல் ஷாப் (Pharmacy)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>சேவை கிடைக்கும் நேரம்</label>
+                <input type="text" id="edit-delivery-info" required>
+            </div>
+            <div class="form-group">
+                <label>இருக்கும் இடம்</label>
+                <input type="text" id="edit-location" required>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="submit-btn" style="background: #10B981;">மாற்றங்களைச் சேமி</button>
+                <button type="button" id="delete-btn" style="background: #EF4444; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%;">நீக்க (Delete)</button>
+            </div>
+        </form>
+    </div>
+</div>
 
     <script src="emergency.js"></script>
 </body>
