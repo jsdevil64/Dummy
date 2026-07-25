@@ -1,4 +1,4 @@
-const SCRIPT_URL = ' https://script.google.com/macros/s/AKfycbwu40gAsdqTjzxHgKkl--RrU-T2sBIVdP4gUsh2jmhHeTd8_gxpuytF3XOI0HYzeS5c3w/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjaLkGVGhC2fEUnv0_qq2zHrfJJGkeOdzQkjftJje_t1gsqKMoq18HWWHc1ssgMQv1Ag/exec';
 
 const productGrid = document.getElementById('product-grid');
 const openFormBtn = document.getElementById('open-form-btn');
@@ -22,14 +22,12 @@ const areaSearch = document.getElementById('area-search');
 const productFilter = document.getElementById('product-filter');
 const chips = document.querySelectorAll('.chip');
 
-// UPI Settings
 const MY_UPI_ID = "8939717405@ybl";
 const MERCHANT_NAME = "Namma Ooru 360"; 
 
 let dataList = [];
 let currentFilter = 'all';
 
-// 2. கூகுள் ஷீட்டில் இருந்து தகவல்களை எடுத்தல்
 async function loadDataFromSheet() {
     productGrid.innerHTML = `
         <div style="text-align:center; padding:40px; grid-column: 1/-1; color:#cda12c;">
@@ -53,7 +51,6 @@ async function loadDataFromSheet() {
     }
 }
 
-// 3. கார்டுகளை உருவாக்குதல்
 function renderCards(dataToRender = dataList) {
     productGrid.innerHTML = '';
     if (!Array.isArray(dataToRender)) return;
@@ -79,6 +76,8 @@ function renderCards(dataToRender = dataList) {
         const type      = item.type      || item["type"]      || Object.values(item)[4] || "cat1";
         const extraInfo = item.delivery  || item["delivery"]  || Object.values(item)[5] || "";
         const location  = item.location  || item["location"]  || Object.values(item)[6] || "இடம் இல்லை";
+        
+        // குறிப்பு: கடவுச்சொல் (Password) இங்கே தவிர்க்கப்பட்டுள்ளது, எனவே கார்டில் தெரியாது.
 
         let iconHtml = '<i class="fa-solid fa-truck-medical"></i>'; 
         let typeBadge = 'ஆம்புலன்ஸ்';
@@ -106,7 +105,6 @@ function renderCards(dataToRender = dataList) {
     });
 }
 
-// 4. தேடுதல் மற்றும் ஃபில்டர் செயலாக்கம்
 function handleSearch() {
     const searchText = areaSearch.value.toLowerCase().trim();
     
@@ -132,7 +130,6 @@ function updateUpiLink() {
     upiPayLink.href = `upi://pay?pa=${MY_UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${amount}&cu=INR&tn=${note}`;
 }
 
-// 5. Events லிசனர்கள்
 searchBtn.addEventListener('click', handleSearch);
 productFilter.addEventListener('change', (e) => {
     currentFilter = e.target.value;
@@ -167,7 +164,6 @@ window.addEventListener('click', (e) => {
     if (e.target === tipsModal) tipsModal.style.display = 'none';
 });
 
-// 6. ஃபார்ம் சப்மிட் செய்யும் போது கூகுள் ஷீட்டுக்கு அனுப்புதல்
 productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -182,7 +178,8 @@ productForm.addEventListener('submit', async (e) => {
         phone: document.getElementById('phone').value,         
         type: document.getElementById('prod-type').value,       
         delivery: document.getElementById('delivery-info').value,
-        location: document.getElementById('location').value    
+        location: document.getElementById('location').value,
+        password: document.getElementById('reg-password').value // பாஸ்வேர்ட் சேர்க்கப்பட்டுள்ளது
     };
 
     try {
